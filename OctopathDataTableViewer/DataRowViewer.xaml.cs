@@ -13,37 +13,24 @@ namespace OctopathDataTableViewer
     public partial class DataRowViewer : UserControl
     {
         public Dictionary<string, UEDataTableCell> ChildDataObjects { get; set; }
-        public DataRowViewer(Dictionary<string, UEDataTableCell> childObjects)
+        public Dictionary<string, UEDataTableCell> CurrentlyDisplayableObjects { get; set; }
+        public int CurrentRowsDisplayed { get; set; }
+        public bool IsMasterViewer { get; set; }
+        public DataRowViewer(Dictionary<string, UEDataTableCell> childObjects, bool isMaster = false)
         {
             InitializeComponent();
             ChildDataObjects = childObjects;
+            CurrentlyDisplayableObjects = childObjects;
+            IsMasterViewer = isMaster;
         }
 
         private void Viewer_Loaded(object sender, RoutedEventArgs e)
         {
             UEObjectDataPanel.Children.Clear();
-            var grid = new Grid();
-            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(20, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(10, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(70, GridUnitType.Star) });
-
-            for (int i = 0; i < ChildDataObjects.Count; i++)
-            {
-                grid.RowDefinitions.Add(new RowDefinition());
-                var keyValuePair = ChildDataObjects.ToList()[i];
-                var keyLabel = new Label();
-                keyLabel.Content = keyValuePair.Key;
-                Grid.SetColumn(keyLabel, 0);
-                Grid.SetRow(keyLabel, i);
-                grid.Children.Add(keyLabel);
-
-                var cell = keyValuePair.Value;
-                var element = GenerateElementFromCell(cell);
-                Grid.SetColumn(element, cell.Column.ColumnType == UE4PropertyType.ArrayProperty || cell.Column.ColumnType == UE4PropertyType.StructProperty ? 1 : 2);
-                Grid.SetRow(element, i);
-                grid.Children.Add(element);
-            }
-            UEObjectDataPanel.Children.Add(grid);
+            UEObjectDataPanel.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(20, GridUnitType.Star) });
+            UEObjectDataPanel.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(5, GridUnitType.Star) });
+            UEObjectDataPanel.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(75, GridUnitType.Star) });
+            LoadRows(IsMasterViewer ? 50 : ChildDataObjects.Count);
         }
 
         private void ExpandStructButton_Clicked(object sender, RoutedEventArgs e)
@@ -51,7 +38,7 @@ namespace OctopathDataTableViewer
             var button = (Button)sender;
             Grid parent = (Grid)(button).Parent;
             int rowNum = Grid.GetRow(button);
-            string key = (string)((Label)(parent.Children.Cast<UIElement>().First(element => Grid.GetRow(element) == rowNum && Grid.GetColumn(element) == 0))).Content;
+            string key = (string)((TextBlock)(parent.Children.Cast<UIElement>().First(element => Grid.GetRow(element) == rowNum && Grid.GetColumn(element) == 0))).Text;
             var dataObject = ChildDataObjects[key];
             var childViewer = CreateDataRowViewerFromStructCell(dataObject);
             Grid.SetRow(childViewer, rowNum);
@@ -84,7 +71,7 @@ namespace OctopathDataTableViewer
             var button = (Button)sender;
             Grid parent = (Grid)(button).Parent;
             int rowNum = Grid.GetRow(button);
-            string key = (string)((Label)(parent.Children.Cast<UIElement>().First(element => Grid.GetRow(element) == rowNum && Grid.GetColumn(element) == 0))).Content;
+            string key = (string)((TextBlock)(parent.Children.Cast<UIElement>().First(element => Grid.GetRow(element) == rowNum && Grid.GetColumn(element) == 0))).Text;
             var dataObject = ChildDataObjects[key];
             var childViewer = CreateDataRowViewerFromArrayCell(dataObject);
             Grid.SetRow(childViewer, rowNum);
@@ -112,6 +99,38 @@ namespace OctopathDataTableViewer
             parent.Children.Add(expandButton);
         }
 
+        public void LoadRows(int rowsToLoad)
+        {
+            int startingRows = CurrentRowsDisplayed;
+            for (int i = startingRows; i < CurrentlyDisplayableObjects.Count && i < startingRows + rowsToLoad; i++)
+            {
+                UEObjectDataPanel.RowDefinitions.Add(new RowDefinition());
+                var keyValuePair = CurrentlyDisplayableObjects.ToList()[i];
+                var keyTextBlock = new TextBlock();
+                keyTextBlock.Text = keyValuePair.Key;
+                keyTextBlock.MinHeight = 20;
+                keyTextBlock.Margin = new Thickness(5);
+                Grid.SetColumn(keyTextBlock, 0);
+                Grid.SetRow(keyTextBlock, i);
+                UEObjectDataPanel.Children.Add(keyTextBlock);
+
+                var cell = keyValuePair.Value;
+                var element = GenerateElementFromCell(cell);
+                Grid.SetColumn(element, cell.Column.ColumnType == UE4PropertyType.ArrayProperty || cell.Column.ColumnType == UE4PropertyType.StructProperty ? 1 : 2);
+                Grid.SetRow(element, i);
+                UEObjectDataPanel.Children.Add(element);
+                CurrentRowsDisplayed = i + 1;
+            }
+        }
+
+        public void FilterContentByKey(string key)
+        {
+            CurrentlyDisplayableObjects = ChildDataObjects.Where(x => x.Key.ToLower().Contains(key.ToLower())).ToDictionary(x => x.Key, x => x.Value);
+            CurrentRowsDisplayed = 0;
+            UEObjectDataPanel.Children.Clear();
+            LoadRows(50);
+        }
+
         private UIElement GenerateElementFromCell(UEDataTableCell cell)
         {
             UIElement element;
@@ -128,12 +147,17 @@ namespace OctopathDataTableViewer
                     Binding checkBinding = new Binding("Value");
                     checkBinding.Source = cell;
                     ((CheckBox)element).SetBinding(CheckBox.IsCheckedProperty, checkBinding);
+                    ((CheckBox)element).VerticalAlignment = VerticalAlignment.Center;
+                    ((CheckBox)element).Margin = new Thickness(2);
                     break;
                 default:
                     element = new TextBox();
                     Binding textBinding = new Binding("Value");
                     textBinding.Source = cell;
                     ((TextBox)element).SetBinding(TextBox.TextProperty, textBinding);
+                    ((TextBox)element).VerticalAlignment = VerticalAlignment.Center;
+                    ((TextBox)element).Margin = new Thickness(2);
+                    ((TextBox)element).VerticalContentAlignment = VerticalAlignment.Center;
                     break;
             }
             return element;
@@ -164,10 +188,14 @@ namespace OctopathDataTableViewer
         private Button CreateExpandStructButton()
         {
             var expandButton = new Button();
-            expandButton.Content = "expand";
+            expandButton.Content = "+";
+            expandButton.Height = 20;
+            expandButton.Width = 20;
             expandButton.Margin = new Thickness(5);
             expandButton.HorizontalAlignment = HorizontalAlignment.Left;
-            expandButton.VerticalAlignment = VerticalAlignment.Center;
+            expandButton.VerticalAlignment = VerticalAlignment.Top;
+            expandButton.VerticalContentAlignment = VerticalAlignment.Center;
+            expandButton.HorizontalAlignment = HorizontalAlignment.Center;
             expandButton.Click += ExpandStructButton_Clicked;
             return expandButton;
         }
@@ -175,10 +203,14 @@ namespace OctopathDataTableViewer
         private Button CreateCollapseStructButton()
         {
             var collapseButton = new Button();
-            collapseButton.Content = "collapse";
+            collapseButton.Content = "-";
+            collapseButton.Height = 20;
+            collapseButton.Width = 20;
             collapseButton.Margin = new Thickness(5);
             collapseButton.HorizontalAlignment = HorizontalAlignment.Left;
             collapseButton.VerticalAlignment = VerticalAlignment.Top;
+            collapseButton.VerticalContentAlignment = VerticalAlignment.Center;
+            collapseButton.HorizontalAlignment = HorizontalAlignment.Center;
             collapseButton.Click += CollapseStructButton_Clicked;
             return collapseButton;
         }
@@ -186,10 +218,14 @@ namespace OctopathDataTableViewer
         private Button CreateExpandArrayButton()
         {
             var expandButton = new Button();
-            expandButton.Content = "expand";
+            expandButton.Content = "+";
+            expandButton.Height = 20;
+            expandButton.Width = 20;
             expandButton.Margin = new Thickness(5);
             expandButton.HorizontalAlignment = HorizontalAlignment.Left;
-            expandButton.VerticalAlignment = VerticalAlignment.Center;
+            expandButton.VerticalAlignment = VerticalAlignment.Top;
+            expandButton.VerticalContentAlignment = VerticalAlignment.Center;
+            expandButton.HorizontalAlignment = HorizontalAlignment.Center;
             expandButton.Click += ExpandArrayButton_Clicked;
             return expandButton;
         }
@@ -197,10 +233,14 @@ namespace OctopathDataTableViewer
         private Button CreateCollapseArrayButton()
         {
             var collapseButton = new Button();
-            collapseButton.Content = "collapse";
+            collapseButton.Content = "-";
+            collapseButton.Height = 20;
+            collapseButton.Width = 20;
             collapseButton.Margin = new Thickness(5);
             collapseButton.HorizontalAlignment = HorizontalAlignment.Left;
             collapseButton.VerticalAlignment = VerticalAlignment.Top;
+            collapseButton.VerticalContentAlignment = VerticalAlignment.Center;
+            collapseButton.HorizontalAlignment = HorizontalAlignment.Center;
             collapseButton.Click += CollapseArrayButton_Clicked;
             return collapseButton;
         }

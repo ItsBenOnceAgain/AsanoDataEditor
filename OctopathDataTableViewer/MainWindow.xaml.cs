@@ -4,6 +4,7 @@ using Microsoft.Win32;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace OctopathDataTableViewer
 {
@@ -15,6 +16,7 @@ namespace OctopathDataTableViewer
         public UEDataTable CurrentTable { get; set; }
         public List<string> CurrentKeys { get; set; }
         public UEDataTableObject CurrentSelectedObject { get; set; }
+        public bool TableHasLoaded { get; set; }
         public MainWindow()
         {
             InitializeComponent();
@@ -22,7 +24,7 @@ namespace OctopathDataTableViewer
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-
+            TableHasLoaded = false;
         }
 
         private void MenuItemOpen_Click(object sender, RoutedEventArgs e)
@@ -42,7 +44,8 @@ namespace OctopathDataTableViewer
                 CurrentTable = DataTableParser.CreateDataTable(uassetOFD.FileName, uexpOFD.FileName);
                 CurrentKeys = CurrentTable.Rows.Keys.ToList();
                 var formattedDictionary = CurrentTable.Rows.ToDictionary(x => x.Key, x => new UEDataTableCell(new UEDataTableColumn("Data", UE4PropertyType.StructProperty), x.Value));
-                MainCanvas.Content = new DataRowViewer(formattedDictionary);
+                MainCanvas.Content = new DataRowViewer(formattedDictionary, true);
+                TableHasLoaded = true;
             }
             else
             {
@@ -69,6 +72,25 @@ namespace OctopathDataTableViewer
             else
             {
                 MessageBox.Show(this, "The operation has been cancelled.");
+            }
+        }
+
+        private void LoadRowsButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (TableHasLoaded)
+            {
+                var mainViewer = (DataRowViewer)MainCanvas.Content;
+                mainViewer.LoadRows(50);
+            }
+        }
+
+        private void KeySearchTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            if (TableHasLoaded)
+            {
+                var text = ((TextBox)e.Source).Text;
+                var mainViewer = (DataRowViewer)MainCanvas.Content;
+                mainViewer.FilterContentByKey(text);
             }
         }
     }
