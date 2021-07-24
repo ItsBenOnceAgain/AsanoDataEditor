@@ -16,8 +16,35 @@
                 <MenuItem Header="_Save As" Click="MenuItemSaveAs_Click"/>
             </MenuItem>
         </Menu>
-        <ScrollViewer x:Name="MainCanvas"
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="70*"/>
+                <ColumnDefinition Width="30*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="7*"/>
+                <RowDefinition Height="93*"/>
+            </Grid.RowDefinitions>
+            <DockPanel>
+                <Label Content="Search by key: "
+                       VerticalContentAlignment="Center"/>
+                <TextBox x:Name="KeySearchTextBox"
+                         DockPanel.Dock="Right"
+                         VerticalContentAlignment="Center"
+                         Height="20"
+                         TextChanged="KeySearchTextBox_TextChanged"/>
+            </DockPanel>
+            <Button x:Name="LoadRowsButton"
+                    Grid.Column="1"
+                    Content="Load More Rows"
+                    Height="20"
+                    Margin="10"
+                    Click="LoadRowsButton_Click"/>
+            <ScrollViewer x:Name="MainCanvas"
+                          Grid.Row="1"
+                          Grid.ColumnSpan="2"
                           VerticalScrollBarVisibility="Visible"
                           HorizontalScrollBarVisibility="Disabled"/>
+        </Grid>
     </DockPanel>
 </Window>
