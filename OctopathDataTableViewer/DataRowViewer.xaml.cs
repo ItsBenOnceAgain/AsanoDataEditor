@@ -1,4 +1,5 @@
 ﻿using DataEditorUE4.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -16,20 +17,22 @@ namespace OctopathDataTableViewer
         public Dictionary<string, UEDataTableCell> CurrentlyDisplayableObjects { get; set; }
         public int CurrentRowsDisplayed { get; set; }
         public bool IsMasterViewer { get; set; }
-        public DataRowViewer(Dictionary<string, UEDataTableCell> childObjects, bool isMaster = false)
+        public UEDataTableCell ParentCell { get; set; }
+        public DataRowViewer(Dictionary<string, UEDataTableCell> childObjects, UEDataTableCell parent, bool isMaster = false)
         {
             InitializeComponent();
             ChildDataObjects = childObjects;
             CurrentlyDisplayableObjects = childObjects;
             IsMasterViewer = isMaster;
+            ParentCell = parent;
         }
 
         private void Viewer_Loaded(object sender, RoutedEventArgs e)
         {
             UEObjectDataPanel.Children.Clear();
-            UEObjectDataPanel.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(20, GridUnitType.Star) });
-            UEObjectDataPanel.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(5, GridUnitType.Star) });
-            UEObjectDataPanel.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(75, GridUnitType.Star) });
+            UEObjectDataPanel.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) });
+            UEObjectDataPanel.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) });
+            UEObjectDataPanel.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) });
             LoadRows(IsMasterViewer ? 50 : ChildDataObjects.Count);
         }
 
@@ -74,6 +77,7 @@ namespace OctopathDataTableViewer
             string key = (string)((TextBlock)(parent.Children.Cast<UIElement>().First(element => Grid.GetRow(element) == rowNum && Grid.GetColumn(element) == 0))).Text;
             var dataObject = ChildDataObjects[key];
             var childViewer = CreateDataRowViewerFromArrayCell(dataObject);
+            childViewer.AddArrayElementButtonGrid.Visibility = Visibility.Visible;
             Grid.SetRow(childViewer, rowNum);
             Grid.SetColumn(childViewer, 2);
             parent.Children.Remove(button);
@@ -99,8 +103,14 @@ namespace OctopathDataTableViewer
             parent.Children.Add(expandButton);
         }
 
-        public void LoadRows(int rowsToLoad)
+        public void LoadRows(int rowsToLoad, bool reload = false)
         {
+            if (reload)
+            {
+                CurrentRowsDisplayed = 0;
+                UEObjectDataPanel.Children.Clear();
+                UEObjectDataPanel.RowDefinitions.Clear();
+            }
             int startingRows = CurrentRowsDisplayed;
             for (int i = startingRows; i < CurrentlyDisplayableObjects.Count && i < startingRows + rowsToLoad; i++)
             {
@@ -171,7 +181,7 @@ namespace OctopathDataTableViewer
             {
                 childDictionary.Add(child.Column.ColumnName, child);
             }
-            return new DataRowViewer(childDictionary);
+            return new DataRowViewer(childDictionary, cell);
         }
 
         private DataRowViewer CreateDataRowViewerFromArrayCell(UEDataTableCell cell)
@@ -182,7 +192,7 @@ namespace OctopathDataTableViewer
             {
                 childDictionary.Add(i.ToString(), childCellList[i]);
             }
-            return new DataRowViewer(childDictionary);
+            return new DataRowViewer(childDictionary, cell);
         }
 
         private Button CreateExpandStructButton()
@@ -243,6 +253,21 @@ namespace OctopathDataTableViewer
             collapseButton.HorizontalAlignment = HorizontalAlignment.Center;
             collapseButton.Click += CollapseArrayButton_Clicked;
             return collapseButton;
+        }
+
+        private void AddArrayElementButton_Click(object sender, RoutedEventArgs e)
+        {
+            string keyToAdd = (int.Parse(ChildDataObjects.Last().Key) + 1).ToString();
+            var result = MessageBox.Show($"This will add a new row to this array, is that OK?", "Add row confirmation", MessageBoxButton.OKCancel);
+            if (result == MessageBoxResult.OK)
+            {
+                var newObject = ChildDataObjects.ToList().First().Value.Copy();
+                ChildDataObjects.Add(keyToAdd, newObject);
+
+                var parentCellsList = (List<UEDataTableCell>)ParentCell.Value;
+                parentCellsList.Add(newObject);
+                LoadRows(ChildDataObjects.Count, true);
+            }
         }
     }
 }
