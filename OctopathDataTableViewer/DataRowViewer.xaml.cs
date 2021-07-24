@@ -27,9 +27,9 @@ namespace OctopathDataTableViewer
         private void Viewer_Loaded(object sender, RoutedEventArgs e)
         {
             UEObjectDataPanel.Children.Clear();
-            UEObjectDataPanel.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(20, GridUnitType.Star) });
-            UEObjectDataPanel.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(5, GridUnitType.Star) });
-            UEObjectDataPanel.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(75, GridUnitType.Star) });
+            UEObjectDataPanel.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) });
+            UEObjectDataPanel.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) });
+            UEObjectDataPanel.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) });
             LoadRows(IsMasterViewer ? 50 : ChildDataObjects.Count);
         }
 
