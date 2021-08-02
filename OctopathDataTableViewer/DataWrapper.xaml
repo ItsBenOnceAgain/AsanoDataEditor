@@ -13,8 +13,8 @@
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="5*"/>
-            <RowDefinition Height="90*"/>
-            <RowDefinition Height="5*"/>
+            <RowDefinition Height="85*"/>
+            <RowDefinition Height="10*"/>
         </Grid.RowDefinitions>
         <DockPanel>
             <Label Content="Search by key: "
@@ -42,17 +42,40 @@
                 <ColumnDefinition Width="30*"/>
                 <ColumnDefinition Width="70*"/>
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
             <Button x:Name="AddRowButton"
                     Content="Add New Row"
                     Height="20"
                     Margin="10"
                     Click="AddRowButton_Click"/>
             <DockPanel Grid.Column="1">
-                <Label Content="Key: "
+                <Label Content="Key to add: "
                            DockPanel.Dock="Left"
                            VerticalAlignment="Center"
                            VerticalContentAlignment="Center"/>
                 <TextBox x:Name="RowKeyTextBox"
+                             DockPanel.Dock="Right"
+                             Height="20"
+                             Margin="10"
+                             VerticalAlignment="Center"
+                             VerticalContentAlignment="Center"/>
+            </DockPanel>
+            <Button x:Name="CopyRowButton"
+                    Content="Copy Row"
+                    Height="20"
+                    Margin="10"
+                    Click="CopyRowButton_Click"
+                    Grid.Row="1"/>
+            <DockPanel Grid.Column="1"
+                       Grid.Row="1">
+                <Label Content="Key to copy: "
+                           DockPanel.Dock="Left"
+                           VerticalAlignment="Center"
+                           VerticalContentAlignment="Center"/>
+                <TextBox x:Name="CopyRowKeyTextBox"
                              DockPanel.Dock="Right"
                              Height="20"
                              Margin="10"

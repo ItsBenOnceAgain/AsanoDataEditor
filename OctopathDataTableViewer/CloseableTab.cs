@@ -76,7 +76,7 @@ namespace OctopathDataTableViewer
 
         void button_close_Click(object sender, RoutedEventArgs e)
         {
-            var messageResult = MessageBox.Show($"Are you sure you want to close {Title}? Unsaved changes will be lost.", "Warning", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+            var messageResult = MessageBox.Show($"Are you sure you want to close {Title}? Unsaved changes will be lost.", "Warning!", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
             if(messageResult == MessageBoxResult.OK)
             {
                 ((TabControl)this.Parent).Items.Remove(this);
