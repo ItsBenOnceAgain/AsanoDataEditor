@@ -1,0 +1,22 @@
+﻿<UserControl x:Class="OctopathDataTableViewer.CloseableHeader"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:fa="http://schemas.fontawesome.io/icons/"
+      mc:Ignorable="d" 
+      d:DesignHeight="23" d:DesignWidth="81" Margin="0">
+    <StackPanel Orientation="Horizontal">
+        <Label Content="TabItem"
+               Height="23"
+               HorizontalAlignment="Left"
+               Name="label_TabTitle" VerticalAlignment="Top" 
+          FontFamily="Courier" FontSize="12" />
+        <Button Height="19"
+                Name="button_close"
+                Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" 
+                ToolTip="Close">
+            <fa:ImageAwesome Icon="Close" Margin="1"/>
+        </Button>
+    </StackPanel>
+</UserControl>

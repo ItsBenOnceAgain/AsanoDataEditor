@@ -4,72 +4,28 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OctopathDataTableViewer"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
         mc:Ignorable="d"
         WindowState="Maximized"
         Title="UE4 Data Table Editor" Height="900" Width="1600"
-        Icon="Icon.ico"
-        Loaded="Window_Loaded">
+        Icon="Icon.ico">
     <DockPanel>
-        <Menu DockPanel.Dock="Top">
+        <Menu DockPanel.Dock="Top" x:Name="MainMenu">
             <MenuItem Header="_File">
                 <MenuItem Header="_Open" Click="MenuItemOpen_Click"/>
                 <MenuItem Header="_Save As" Click="MenuItemSaveAs_Click"/>
             </MenuItem>
         </Menu>
         <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="70*"/>
-                <ColumnDefinition Width="30*"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="5*"/>
-                <RowDefinition Height="90*"/>
-                <RowDefinition Height="5*"/>
-            </Grid.RowDefinitions>
-            <DockPanel>
-                <Label Content="Search by key: "
-                       VerticalContentAlignment="Center"/>
-                <TextBox x:Name="KeySearchTextBox"
-                         DockPanel.Dock="Right"
-                         VerticalContentAlignment="Center"
-                         Height="20"
-                         TextChanged="KeySearchTextBox_TextChanged"/>
-            </DockPanel>
-            <Button x:Name="LoadRowsButton"
-                    Grid.Column="1"
-                    Content="Load More Rows"
-                    Height="20"
-                    Margin="10"
-                    Click="LoadRowsButton_Click"/>
-            <ScrollViewer x:Name="MainCanvas"
-                          Grid.Row="1"
-                          Grid.ColumnSpan="2"
-                          VerticalScrollBarVisibility="Visible"
-                          HorizontalScrollBarVisibility="Disabled"/>
-            <Grid Grid.Row="2"
-                  Grid.Column="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="30*"/>
-                    <ColumnDefinition Width="70*"/>
-                </Grid.ColumnDefinitions>
-                <Button x:Name="AddRowButton"
-                    Content="Add New Row"
-                    Height="20"
-                    Margin="10"
-                    Click="AddRowButton_Click"/>
-                <DockPanel Grid.Column="1">
-                    <Label Content="Key: "
-                           DockPanel.Dock="Left"
-                           VerticalAlignment="Center"
-                           VerticalContentAlignment="Center"/>
-                    <TextBox x:Name="RowKeyTextBox"
-                             DockPanel.Dock="Right"
-                             Height="20"
-                             Margin="10"
-                             VerticalAlignment="Center"
-                             VerticalContentAlignment="Center"/>
-                </DockPanel>
-            </Grid>
+            <TabControl x:Name="TableTabs">
+            </TabControl>
+            <fa:ImageAwesome Name="LoadingSpinner"
+                             Foreground="Gray"
+                             Icon="Refresh"
+                             Spin="True"
+                             Width="200"
+                             Height="200"
+                             Visibility="Hidden"/>
         </Grid>
     </DockPanel>
 </Window>

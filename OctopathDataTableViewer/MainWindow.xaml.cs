@@ -1,11 +1,14 @@
 ﻿using DataEditorUE4.Models;
 using DataEditorUE4.Utilities;
+using FontAwesome.WPF;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace OctopathDataTableViewer
 {
@@ -14,25 +17,12 @@ namespace OctopathDataTableViewer
     /// </summary>
     public partial class MainWindow : Window
     {
-        public UEDataTable CurrentTable { get; set; }
-        public List<string> CurrentKeys { get; set; }
-        public UEDataTableObject CurrentSelectedObject { get; set; }
-        public bool TableHasLoaded { get; set; }
         public MainWindow()
         {
             InitializeComponent();
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            TableHasLoaded = false;
-            AddRowButton.IsEnabled = false;
-            RowKeyTextBox.IsEnabled = false;
-            KeySearchTextBox.IsEnabled = false;
-            LoadRowsButton.IsEnabled = false;
-        }
-
-        private void MenuItemOpen_Click(object sender, RoutedEventArgs e)
+        private async void MenuItemOpen_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog uassetOFD = new OpenFileDialog();
             uassetOFD.DefaultExt = "uasset";
@@ -48,15 +38,17 @@ namespace OctopathDataTableViewer
 
             if (uassetOFDResult == true && uexpOFDResult == true)
             {
-                CurrentTable = DataTableParser.CreateDataTable(uassetOFD.FileName, uexpOFD.FileName);
-                CurrentKeys = CurrentTable.Rows.Keys.ToList();
-                var formattedDictionary = CurrentTable.Rows.ToDictionary(x => x.Key, x => new UEDataTableCell(new UEDataTableColumn("Data", UE4PropertyType.StructProperty), x.Value));
-                MainCanvas.Content = new DataRowViewer(formattedDictionary, null, true);
-                TableHasLoaded = true;
-                AddRowButton.IsEnabled = true;
-                RowKeyTextBox.IsEnabled = true;
-                KeySearchTextBox.IsEnabled = true;
-                LoadRowsButton.IsEnabled = true;
+                StartLoading();
+                try
+                {
+                    var currentTable = await OpenFile(uassetOFD.FileName, uexpOFD.FileName);
+                    AddTab(currentTable);
+                }
+                catch(Exception error)
+                {
+                    MessageBox.Show(error.Message, "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                StopLoading();
             }
             else
             {
@@ -64,10 +56,11 @@ namespace OctopathDataTableViewer
             }
         }
 
-        private void MenuItemSaveAs_Click(object sender, RoutedEventArgs e)
+        private async void MenuItemSaveAs_Click(object sender, RoutedEventArgs e)
         {
-            string fullUassetPath = CurrentTable.SourceUassetPath;
-            string fullUexpPath = CurrentTable.SourceUexpPath;
+            var currentTable = ((DataWrapper)((TabItem)TableTabs.SelectedItem).Content).CurrentTable;
+            string fullUassetPath = currentTable.SourceUassetPath;
+            string fullUexpPath = currentTable.SourceUexpPath;
             string[] fullUassetPathPieces = fullUassetPath.Split(@"\");
             string[] fullUexpPathPieces = fullUexpPath.Split(@"\");
             string uassetDirectory = string.Join(@"\", fullUassetPathPieces.Take(fullUassetPathPieces.Length - 1));
@@ -93,7 +86,16 @@ namespace OctopathDataTableViewer
 
             if (uassetSFDResult == true && uexpSFDResult == true)
             {
-                DataTableFileWriter.WriteTableToFile(CurrentTable, uassetSFD.FileName, uexpSFD.FileName);
+                StartLoading();
+                try
+                {
+                    await SaveFile(currentTable, uassetSFD.FileName, uexpSFD.FileName);
+                }
+                catch(Exception error)
+                {
+                    MessageBox.Show(error.Message, "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                StopLoading();
             }
             else
             {
@@ -101,51 +103,52 @@ namespace OctopathDataTableViewer
             }
         }
 
-        private void LoadRowsButton_Click(object sender, RoutedEventArgs e)
+        private void AddTab(UEDataTable table)
         {
-            if (TableHasLoaded)
+            foreach(var tab in TableTabs.Items)
             {
-                var mainViewer = (DataRowViewer)MainCanvas.Content;
-                mainViewer.LoadRows(50);
+                ((TabItem)tab).IsSelected = false;
             }
+            var newTab = new CloseableTab();
+            newTab.Title = table.TableName;
+            newTab.Content = new DataWrapper(table);
+            newTab.IsSelected = true;
+            TableTabs.Items.Add(newTab);
         }
 
-        private void KeySearchTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        private void StartLoading()
         {
-            if (TableHasLoaded)
-            {
-                var text = ((TextBox)e.Source).Text;
-                var mainViewer = (DataRowViewer)MainCanvas.Content;
-                mainViewer.FilterContentByKey(text);
-            }
+            MainMenu.IsEnabled = false;
+            TableTabs.IsEnabled = false;
+            LoadingSpinner.Visibility = Visibility.Visible;
         }
 
-        private void AddRowButton_Click(object sender, RoutedEventArgs e)
+        private void StopLoading()
         {
-            if(TableHasLoaded)
+            LoadingSpinner.Visibility = Visibility.Hidden;
+            MainMenu.IsEnabled = true;
+            TableTabs.IsEnabled = true;
+        }
+        
+        private async Task<UEDataTable> OpenFile(string uasset, string uexp)
+        {
+            return await Task.Run(() =>
             {
-                string keyToAdd = RowKeyTextBox.Text;
-                if (CurrentKeys.Contains(keyToAdd))
-                {
-                    MessageBox.Show("This key already exists, please select a unique key!", "Duplicate key detected", MessageBoxButton.OK);
-                }
-                else if (RowKeyTextBox.Text == "")
-                {
-                    MessageBox.Show("The key cannot be an empty string!", "Empty key detected", MessageBoxButton.OK);
-                }
-                else
-                {
-                    var result = MessageBox.Show($"This will add a new row with key {keyToAdd}, is that OK?", "Add row confirmation", MessageBoxButton.OKCancel);
-                    if(result == MessageBoxResult.OK)
-                    {
-                        var newObject = CurrentTable.Rows.ToList().First().Value.Copy();
-                        CurrentKeys.Add(keyToAdd);
-                        CurrentTable.Rows.Add(keyToAdd, newObject);
-                        var formattedDictionary = CurrentTable.Rows.ToDictionary(x => x.Key, x => new UEDataTableCell(new UEDataTableColumn("Data", UE4PropertyType.StructProperty), x.Value));
-                        MainCanvas.Content = new DataRowViewer(formattedDictionary, null, true);
-                    }
-                }
-            }
+                return DataTableParser.CreateDataTable(uasset, uexp);
+            });
+        }
+
+        private async Task SaveFile(UEDataTable currentTable, string uasset, string uexp)
+        {
+            await Task.Run(() =>
+            {
+                DataTableFileWriter.WriteTableToFile(currentTable, uasset, uexp);
+            });
+        }
+
+        private void CloseButton_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            var tabToClose = ((StackPanel)((ImageAwesome)sender).Parent).Parent;
         }
     }
 }
