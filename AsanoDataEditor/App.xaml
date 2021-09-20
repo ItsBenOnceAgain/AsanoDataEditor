@@ -1,7 +1,7 @@
-﻿<Application x:Class="OctopathDataTableViewer.App"
+﻿<Application x:Class="AsanoDataEditor.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:OctopathDataTableViewer"
+             xmlns:local="clr-namespace:AsanoDataEditor"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         

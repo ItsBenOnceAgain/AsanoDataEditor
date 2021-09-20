@@ -1,13 +1,13 @@
-﻿<Window x:Class="OctopathDataTableViewer.MainWindow"
+﻿<Window x:Class="AsanoDataEditor.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:OctopathDataTableViewer"
+        xmlns:local="clr-namespace:AsanoDataEditor"
         xmlns:fa="http://schemas.fontawesome.io/icons/"
         mc:Ignorable="d"
         WindowState="Maximized"
-        Title="UE4 Data Table Editor" Height="900" Width="1600"
+        Title="Asano Data Editor" Height="900" Width="1600"
         Icon="Icon.ico">
     <DockPanel>
         <Menu DockPanel.Dock="Top" x:Name="MainMenu">

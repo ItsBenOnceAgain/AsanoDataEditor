@@ -10,7 +10,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace OctopathDataTableViewer
+namespace AsanoDataEditor
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

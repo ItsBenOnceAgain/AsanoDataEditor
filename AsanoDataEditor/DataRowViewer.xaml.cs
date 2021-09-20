@@ -8,7 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace OctopathDataTableViewer
+namespace AsanoDataEditor
 {
     /// <summary>
     /// Interaction logic for ObjectViewer.xaml

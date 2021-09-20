@@ -6,7 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace OctopathDataTableViewer
+namespace AsanoDataEditor
 {
     public class CloseableTab : TabItem
     {
