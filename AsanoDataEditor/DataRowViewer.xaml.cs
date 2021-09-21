@@ -337,8 +337,8 @@ namespace AsanoDataEditor
             {
                 var wrapper = (DataWrapper)((Grid)((ScrollViewer)this.Parent).Parent).Parent;
                 wrapper.CurrentKeys.Remove(key);
-                wrapper.CurrentTable.Rows.Remove(key);
-                var formattedDictionary = wrapper.CurrentTable.Rows.ToDictionary(x => x.Key, x => new UEDataTableCell(new UEDataTableColumn("Data", UE4PropertyType.StructProperty), x.Value));
+                wrapper.CurrentTable.Rows.Remove(wrapper.CurrentTable.Rows.Keys.Where(x => ((object)x.KeyData).ToString() == key).Single());
+                var formattedDictionary = wrapper.CurrentTable.Rows.ToDictionary(x => ((object)x.Key.KeyData).ToString(), x => new UEDataTableCell(new UEDataTableColumn("Data", UE4PropertyType.StructProperty), x.Value));
                 wrapper.MainCanvas.Content = new DataRowViewer(formattedDictionary, null, true);
             }
         }

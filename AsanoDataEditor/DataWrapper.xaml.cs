@@ -29,8 +29,8 @@ namespace AsanoDataEditor
             InitializeComponent();
 
             CurrentTable = table;
-            CurrentKeys = CurrentTable.Rows.Keys.ToList();
-            var formattedDictionary = CurrentTable.Rows.ToDictionary(x => x.Key, x => new UEDataTableCell(new UEDataTableColumn("Data", UE4PropertyType.StructProperty), x.Value));
+            CurrentKeys = CurrentTable.Rows.Keys.Select(x => ((object)x.KeyData).ToString()).ToList();
+            var formattedDictionary = CurrentTable.Rows.ToDictionary(x => ((object)x.Key.KeyData).ToString(), x => new UEDataTableCell(new UEDataTableColumn("Data", UE4PropertyType.StructProperty), x.Value));
             MainCanvas.Content = new DataRowViewer(formattedDictionary, null, true, true);
         }
 
@@ -63,10 +63,16 @@ namespace AsanoDataEditor
                 var result = MessageBox.Show($"This will add a new row with key {keyToAdd}, is that OK?", "Add row confirmation", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
                 if (result == MessageBoxResult.OK)
                 {
+                    var propType = CurrentTable.Rows.First().Key.DataType;
                     var newObject = CurrentTable.Rows.ToList().First().Value.Copy();
+                    var keyDataToAdd = new DataRowKey()
+                    {
+                        KeyData = keyToAdd,
+                        DataType = propType
+                    };
                     CurrentKeys.Add(keyToAdd);
-                    CurrentTable.Rows.Add(keyToAdd, newObject);
-                    var formattedDictionary = CurrentTable.Rows.ToDictionary(x => x.Key, x => new UEDataTableCell(new UEDataTableColumn("Data", UE4PropertyType.StructProperty), x.Value));
+                    CurrentTable.Rows.Add(keyDataToAdd, newObject);
+                    var formattedDictionary = CurrentTable.Rows.ToDictionary(x => ((object)x.Key.KeyData).ToString(), x => new UEDataTableCell(new UEDataTableColumn("Data", UE4PropertyType.StructProperty), x.Value));
                     MainCanvas.Content = new DataRowViewer(formattedDictionary, null, true, true);
                 }
             }
@@ -93,10 +99,16 @@ namespace AsanoDataEditor
                 var result = MessageBox.Show($"This will add a new row with key {keyToAdd}, with data copied from {keyToCopy}. Is that OK?", "Add row confirmation", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
                 if (result == MessageBoxResult.OK)
                 {
-                    var newObject = CurrentTable.Rows[keyToCopy].Copy();
+                    var newObject = CurrentTable.Rows.Where(x => ((object)x.Key.KeyData).ToString() == keyToCopy).Single().Value.Copy();
+                    var propType = CurrentTable.Rows.First().Key.DataType;
+                    var keyDataToAdd = new DataRowKey()
+                    {
+                        KeyData = keyToAdd,
+                        DataType = propType
+                    };
                     CurrentKeys.Add(keyToAdd);
-                    CurrentTable.Rows.Add(keyToAdd, newObject);
-                    var formattedDictionary = CurrentTable.Rows.ToDictionary(x => x.Key, x => new UEDataTableCell(new UEDataTableColumn("Data", UE4PropertyType.StructProperty), x.Value));
+                    CurrentTable.Rows.Add(keyDataToAdd, newObject);
+                    var formattedDictionary = CurrentTable.Rows.ToDictionary(x => ((object)x.Key.KeyData).ToString(), x => new UEDataTableCell(new UEDataTableColumn("Data", UE4PropertyType.StructProperty), x.Value));
                     MainCanvas.Content = new DataRowViewer(formattedDictionary, null, true, true);
                 }
             }
